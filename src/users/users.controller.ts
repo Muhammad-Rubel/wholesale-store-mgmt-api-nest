@@ -6,6 +6,8 @@ import {
   Patch,
   Param,
   Delete,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -18,27 +20,36 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Post('/')
+  async create(@Body() user: CreateUserDto) {
+    const createdUser = await this.usersService.create(user);
+
+    if (!createdUser) {
+      throw new HttpException(
+        'Error creating user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return createdUser;
   }
 
-  @Get()
+  @Get('/')
   findAll() {
     return this.usersService.findAll();
   }
 
-  @Get(':id')
+  @Get('/:id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Patch('/:id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
 
-  @Delete(':id')
+  @Delete('/:id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }

@@ -1,4 +1,4 @@
-import { Prop } from '@nestjs/mongoose';
+import { Prop, SchemaFactory } from '@nestjs/mongoose';
 
 export enum UserType {
   SUPER_ADMIN = 'super-admin',
@@ -25,3 +25,5 @@ export class User {
   @Prop({ type: String, required: false })
   password: string;
 }
+
+export const UserSchema = SchemaFactory.createForClass(User);
