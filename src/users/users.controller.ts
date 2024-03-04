@@ -21,8 +21,8 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('/')
-  async create(@Body() user: CreateUserDto) {
-    const createdUser = await this.usersService.create(user);
+  async createUser(@Body() user: CreateUserDto) {
+    const createdUser = await this.usersService.createUser(user);
 
     if (!createdUser) {
       throw new HttpException(
@@ -46,11 +46,11 @@ export class UsersController {
 
   @Patch('/:id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+    return this.usersService.update(id, updateUserDto);
   }
 
   @Delete('/:id')
   remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+    return this.usersService.remove(id);
   }
 }

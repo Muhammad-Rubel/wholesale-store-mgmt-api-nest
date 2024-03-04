@@ -1,43 +1,50 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-// import { CreateUserDto } from './dto/create-user.dto';
+import { Injectable } from '@nestjs/common';
+import { Model } from 'mongoose';
+import { User } from './schemas/user.schema';
+import { CreateUserDto } from './dto/create-user.dto';
+import { InjectModel } from '@nestjs/mongoose';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { connection } from 'mongoose';
-import { User, UserSchema } from './schemas/user.schema';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  async create(user: User) {
-    try {
-      const userModel =
-        connection.models.users || connection.model('users', UserSchema);
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-      const newUser = await userModel.create(user);
+  async createUser(createUserDto: CreateUserDto): Promise<User> {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+    createUserDto.password = hashedPassword;
 
-      return newUser;
-    } catch (err: any) {
-      console.log('users.service.ts:createUser', err);
+    const createdUser = new this.userModel(createUserDto);
 
-      throw new HttpException(
-        'Error creating user',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    return createdUser.save();
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll(): Promise<User[]> {
+    return this.userModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  findOne(id: number): Promise<User> {
+    return this.userModel.findById(id).exec();
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    updateUserDto.firstName = '';
-    return `This action updates a #${id} user`;
+  update(id: string, updateUserDto: UpdateUserDto) {
+    return this.userModel
+      .findByIdAndUpdate(
+        {
+          _id: id,
+        },
+        {
+          $set: updateUserDto,
+        },
+        {
+          new: true,
+        },
+      )
+      .exec();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  remove(id: string) {
+    return this.userModel.findByIdAndDelete(id).exec();
   }
 }
